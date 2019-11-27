@@ -33,6 +33,13 @@ class ActivityLogger
     /** @var \Spatie\Activitylog\ActivityLogStatus */
     protected $logStatus;
 
+    /**
+     * Project model
+     *
+     * @var
+     */
+    protected $project;
+
     public function __construct(AuthManager $auth, Repository $config, ActivityLogStatus $logStatus)
     {
         $this->auth = $auth;
@@ -57,6 +64,17 @@ class ActivityLogger
     public function setLogStatus(ActivityLogStatus $logStatus)
     {
         $this->logStatus = $logStatus;
+
+        return $this;
+    }
+
+    /**
+     * @param Model $project
+     * @return \App\Libs\ActivityLogger
+     */
+    public function withProject(Model $project)
+    {
+        $this->$project = $project;
 
         return $this;
     }
@@ -152,6 +170,9 @@ class ActivityLogger
         $activity->description = $this->replacePlaceholders($description, $activity);
 
         $activity->log_name = $this->logName;
+
+        $activity->ip_address = geoip()->getClientIP();
+        $activity->activityLoggable()->save($this->project);
 
         $activity->save();
 
