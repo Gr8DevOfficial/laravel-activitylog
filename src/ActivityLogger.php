@@ -74,7 +74,7 @@ class ActivityLogger
      */
     public function withProject(Model $project)
     {
-        $this->$project = $project;
+        $this->project = $project;
 
         return $this;
     }
@@ -175,6 +175,10 @@ class ActivityLogger
         $activity->activityLoggable()->save($this->project);
 
         $activity->save();
+
+        if ($this->project) {
+            $this->project->activityLogs()->save($activity);
+        }
 
         return $activity;
     }
