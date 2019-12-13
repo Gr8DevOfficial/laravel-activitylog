@@ -34,11 +34,11 @@ class ActivityLogger
     protected $logStatus;
 
     /**
-     * Contract model
+     * Contragent model
      *
      * @var
      */
-    protected $contract;
+    protected $contragent;
 
     public function __construct(AuthManager $auth, Repository $config, ActivityLogStatus $logStatus)
     {
@@ -69,12 +69,12 @@ class ActivityLogger
     }
 
     /**
-     * @param Model $contract
+     * @param Model $contragent
      * @return \App\Libs\ActivityLogger
      */
-    public function withContract(Model $contract)
+    public function withContragent(Model $contragent)
     {
-        $this->contract = $contract;
+        $this->contragent = $contragent;
 
         return $this;
     }
@@ -175,9 +175,9 @@ class ActivityLogger
         $activity->ip_address = geoip()->getClientIP();
         $activity->save();
 
-        if ($this->contract) {
-//            $this->contract->activityLogs()->save($activity);
-            $activity->activityLoggable()->save($this->contract);
+        if ($this->contragent) {
+//            $this->contragent->activityLogs()->save($activity);
+            $activity->activityLoggable()->save($this->contragent);
         }
 
         return $activity;
