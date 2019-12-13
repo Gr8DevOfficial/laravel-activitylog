@@ -71,13 +71,32 @@ class ActivityLogger
 
     /**
      * @param Model $contragent
-     * @return \App\Libs\ActivityLogger
+     * @return ActivityLogger
      */
-    public function withContragent(Model $contragent)
+    public function withContragent($contragent)
     {
-        $this->contragent = $contragent;
+        if ($contragent instanceof Model) {
+            $this->contragent = $contragent;
+        } elseif ($contragent instanceof Collection) {
+            if ($contragent->count() > 0) {
+                $this->contragent = $contragent;
+            }
+        } elseif (is_array($contragent)) {
+            if (count($contragent) > 0) {
+                $this->contragent = collect($contragent);
+            }
+        }
 
         return $this;
+    }
+
+    /**
+     * @param $contragent
+     * @return ActivityLogger
+     */
+    public function withContragents($contragent)
+    {
+        return $this->withContragent($contragent);
     }
 
     public function performedOn(Model $model)
@@ -184,10 +203,7 @@ class ActivityLogger
         $activities = collect();
 
         if ($this->contragent) {
-            if (
-                $this->contragent instanceof Collection ||
-                is_array($this->contragent)
-            ) {
+            if ($this->contragent instanceof Collection) {
                 foreach ($this->contragent as $contragent) {
                     $activity = $this->logOne($description);
                     $activity->activityLoggable()->save($contragent);
