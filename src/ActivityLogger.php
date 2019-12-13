@@ -206,12 +206,12 @@ class ActivityLogger
             if ($this->contragent instanceof Collection) {
                 foreach ($this->contragent as $contragent) {
                     $activity = $this->logOne($description);
-                    $activity->activityLoggable()->save($contragent);
+                    $activity->contragent()->associate($contragent);
                     $activities->push($activity);
                 }
             } else {
                 $activity = $this->logOne($description);
-                $activity->activityLoggable()->save($this->contragent);
+                $activity->contragent()->associate($this->contragent);
                 $activities->push($activity);
             }
         } else {
