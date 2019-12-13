@@ -173,7 +173,7 @@ class ActivityLogger
      * @param string $description
      * @return Model
      */
-    protected function logOne(string $description): Model
+    protected function logOne(string $description, $contragent_id = null): Model
     {
         $activity = ActivitylogServiceProvider::getActivityModelInstance();
 
@@ -183,6 +183,10 @@ class ActivityLogger
 
         if ($this->causedBy) {
             $activity->causer()->associate($this->causedBy);
+        }
+
+        if ($contragent_id) {
+            $activity->contragent_id = $contragent_id;
         }
 
         $activity->properties = $this->properties;
@@ -205,13 +209,11 @@ class ActivityLogger
         if ($this->contragent) {
             if ($this->contragent instanceof Collection) {
                 foreach ($this->contragent as $contragent) {
-                    $activity = $this->logOne($description);
-                    $activity->contragent()->associate($contragent);
+                    $activity = $this->logOne($description, $contragent->id);
                     $activities->push($activity);
                 }
             } else {
-                $activity = $this->logOne($description);
-                $activity->contragent()->associate($this->contragent);
+                $activity = $this->logOne($description, $this->contragent->id);
                 $activities->push($activity);
             }
         } else {
