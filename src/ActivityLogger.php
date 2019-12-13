@@ -4,6 +4,7 @@ namespace Spatie\Activitylog;
 
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Macroable;
 use Spatie\Activitylog\Contracts\Activity;
 use Illuminate\Contracts\Config\Repository;
@@ -149,12 +150,12 @@ class ActivityLogger
         return $this;
     }
 
-    public function log(string $description)
+    /**
+     * @param string $description
+     * @return Model
+     */
+    protected function logOne(string $description): Model
     {
-        if ($this->logStatus->disabled()) {
-            return;
-        }
-
         $activity = ActivitylogServiceProvider::getActivityModelInstance();
 
         if ($this->performedOn) {
@@ -166,21 +167,43 @@ class ActivityLogger
         }
 
         $activity->properties = $this->properties;
-
         $activity->description = $this->replacePlaceholders($description, $activity);
-
         $activity->log_name = $this->logName;
-
-
         $activity->ip_address = geoip()->getClientIP();
         $activity->save();
 
-        if ($this->contragent) {
-//            $this->contragent->activityLogs()->save($activity);
-            $activity->activityLoggable()->save($this->contragent);
+        return $activity;
+    }
+
+    public function log(string $description)
+    {
+        if ($this->logStatus->disabled()) {
+            return;
         }
 
-        return $activity;
+        $activities = collect();
+
+        if ($this->contragent) {
+            if (
+                $this->contragent instanceof Collection ||
+                is_array($this->contragent)
+            ) {
+                foreach ($this->contragent as $contragent) {
+                    $activity = $this->logOne($description);
+                    $activity->activityLoggable()->save($contragent);
+                    $activities->push($activity);
+                }
+            } else {
+                $activity = $this->logOne($description);
+                $activity->activityLoggable()->save($this->contragent);
+                $activities->push($activity);
+            }
+        } else {
+            $activity = $this->logOne($description);
+            $activities->push($activity);
+        }
+
+        return $activities;
     }
 
     protected function normalizeCauser($modelOrId): Model
